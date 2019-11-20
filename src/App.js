@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 import initialData from './initialData';
 import Column from './Column';
@@ -12,7 +12,7 @@ class App extends Component {
   state = initialData;
 
   onDragEnd = result => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, type } = result;
 
     // if destination is out of bounds, return
     if (!destination) {
@@ -27,10 +27,16 @@ class App extends Component {
       return;
     }
 
+    // if draggable type is 'column', update state of column order
+    if (type === 'column') {
+      this.updateColumnOrder(source, destination, draggableId);
+      return;
+    }
+
     // otherwise, update state to reflect drag/drop action
     const start = this.state.columns[source.droppableId];
     const finish = this.state.columns[destination.droppableId];
-    
+
     if (start === finish) {
       this.moveTaskToSameList(start, source, destination, draggableId);
     } else {
@@ -38,9 +44,22 @@ class App extends Component {
     }
   }
 
+  updateColumnOrder(source, destination, draggableId) {
+    const newColumnOrder = Array.from(this.state.columnOrder);
+    newColumnOrder.splice(source.index, 1);
+    newColumnOrder.splice(destination.index, 0, draggableId);
+
+    const newState = {
+      ...this.state,
+      columnOrder: newColumnOrder,
+    };
+    
+    this.setState(newState);
+  }
+
   moveTaskToSameList(start, source, destination, draggableId) {
     const newTaskIds = start.taskIds;
-    
+
     // rearrange taskIds in list
     newTaskIds.splice(source.index, 1);
     newTaskIds.splice(destination.index, 0, draggableId);
@@ -60,7 +79,7 @@ class App extends Component {
 
     this.setState(newState);
   }
-  
+
   moveTaskToDifferentList(start, finish, source, destination, draggableId) {
     // remove task from start tasks
     const newStartTaskIds = start.taskIds;
@@ -91,20 +110,35 @@ class App extends Component {
   }
 
   render() {
+    let taskBoard = this.state.columnOrder.map((columnId, index) => {
+      const column = this.state.columns[columnId];
+      const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
+
+      return <Column
+        key={column.id}
+        column={column}
+        tasks={tasks}
+        index={index}
+      />;
+    });
+
     return (
       <DragDropContext onDragEnd={this.onDragEnd}>
-        <Container>
-          {this.state.columnOrder.map(columnId => {
-            const column = this.state.columns[columnId];
-            const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
-
-            return <Column
-              key={column.id}
-              column={column}
-              tasks={tasks}
-            />;
-          })};
-        </Container>
+        <Droppable
+          droppableId='all-columns'
+          direction='horizontal'
+          type='column'
+        >
+          {provided => (
+            <Container
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {taskBoard}
+              {provided.placeholder}
+            </Container>
+          )}
+        </Droppable>
       </DragDropContext>
     )
   }

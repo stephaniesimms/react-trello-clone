@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { Droppable } from 'react-beautiful-dnd';
+import { Droppable, Draggable } from 'react-beautiful-dnd';
 import Task from './Task';
 
 const Container = styled.div`
   margin: 8px;
   border: 1px solid lightgray;
+  background-color: white;
   border-radius: 2px;
   width: 220px;
 
@@ -21,7 +22,7 @@ const Title = styled.h3`
 const TaskList = styled.div`
   padding: 8px;
   transition: background-color 0.2s ease;
-  background-color: ${props => (props.isDraggingOver ? 'lightgray' : 'white')}
+  background-color: ${props => (props.isDraggingOver ? 'lightgray' : 'inherit')}
   flex-grow: 1;
   min-height: 100px;
 `;
@@ -29,26 +30,35 @@ const TaskList = styled.div`
 class Column extends Component {
 
   render() {
-    const { title, id } = this.props.column;
+    const { column, tasks, index } = this.props;
 
     return (
-      <Container>
-        <Title>{title}</Title>
-        <Droppable droppableId={id}>
-          {(provided, snapshot) => (
-            <TaskList
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              isDraggingOver={snapshot.isDraggingOver}
-            >
-              {this.props.tasks.map((task, index) =>
-                <Task key={task.id} task={task} index={index} />
+      <Draggable draggableId={column.id} index={index}>
+        {(provided) => (
+          <Container
+            {...provided.draggableProps}
+            ref={provided.innerRef}
+          >
+            <Title {...provided.dragHandleProps}>
+              {column.title}
+            </Title>
+            <Droppable droppableId={column.id} type='task'>
+              {(provided, snapshot) => (
+                <TaskList
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  isDraggingOver={snapshot.isDraggingOver}
+                >
+                  {tasks.map((task, index) =>
+                    <Task key={task.id} task={task} index={index} />
+                  )}
+                  {provided.placeholder}
+                </TaskList>
               )}
-              {provided.placeholder}
-            </TaskList>
-          )}
-        </Droppable>
-      </Container>
+            </Droppable>
+          </Container>
+        )}
+      </Draggable>
     );
   }
 }
