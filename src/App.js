@@ -1,18 +1,49 @@
-import React, { Component } from 'react';
+import React, { Component, PureComponent } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 import initialData from './initialData';
 import Column from './Column';
-// import InnerList from './InnerList';
 
 
 const Container = styled.div`
   display: flex;
 `;
 
+/* PureComponent accomplishes same as commented-out code below.
+Don't re-render tasks if user drops column in new position,
+but task order hasn't changed */
+class InnerList extends PureComponent {
+  // shouldComponentUpdate(nextProps) {
+  //   if (
+  //     nextProps.column === this.props.column &&
+  //     nextProps.taskMap === this.props.taskMap &&
+  //     nextProps.index === this.props.index
+  //   ) {
+  //     return false;
+  //   }
+  //   return true;
+  // }
+  
+  render() {
+    const { column, taskMap, index } = this.props;
+    const tasks = column.taskIds.map(taskId => taskMap[taskId]);
+
+    return <Column
+      column={column}
+      tasks={tasks}
+      index={index}
+    />;
+  }
+}
 class App extends Component {
   state = initialData;
 
+  /* Built-in method onDragEnd:
+  - if destination is out of bounds, return
+  - if user dropped into same position, return
+  - if draggable type is 'column', update state of column order
+  - otherwise, update state to reflect drag/drop action of 'task'
+  */
   onDragEnd = result => {
     const { destination, source, draggableId, type } = result;
 
@@ -35,7 +66,7 @@ class App extends Component {
       return;
     }
 
-    // otherwise, update state to reflect drag/drop action
+    // otherwise, update state to reflect drag/drop action of task
     const start = this.state.columns[source.droppableId];
     const finish = this.state.columns[destination.droppableId];
 
@@ -45,7 +76,7 @@ class App extends Component {
       this.moveTaskToDifferentList(start, finish, source, destination, draggableId)
     }
   }
-
+  /* Helper function to update column order */
   updateColumnOrder(source, destination, draggableId) {
     const newColumnOrder = Array.from(this.state.columnOrder);
     newColumnOrder.splice(source.index, 1);
@@ -59,6 +90,7 @@ class App extends Component {
     this.setState(newState);
   }
 
+  /* Helper function to update order of tasks in same list */
   moveTaskToSameList(start, source, destination, draggableId) {
     const newTaskIds = start.taskIds;
 
@@ -82,6 +114,7 @@ class App extends Component {
     this.setState(newState);
   }
 
+  /* Helper function to update order of tasks moving to different list */
   moveTaskToDifferentList(start, finish, source, destination, draggableId) {
     // remove task from start tasks
     const newStartTaskIds = start.taskIds;
@@ -114,12 +147,11 @@ class App extends Component {
   render() {
     let taskBoard = this.state.columnOrder.map((columnId, index) => {
       const column = this.state.columns[columnId];
-      const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
 
-      return <Column
+      return <InnerList
         key={column.id}
         column={column}
-        tasks={tasks}
+        taskMap={this.state.tasks}
         index={index}
       />;
     });
