@@ -30,7 +30,7 @@ const TaskList = styled.div`
 class Column extends Component {
 
   render() {
-    const { column, index } = this.props;
+    const { column, index, tasks } = this.props;
 
     return (
       <Draggable draggableId={column.id} index={index}>
@@ -49,7 +49,7 @@ class Column extends Component {
                   {...provided.droppableProps}
                   isDraggingOver={snapshot.isDraggingOver}
                 >
-                  <InnerList />
+                  <InnerList tasks={tasks}/>
                   {provided.placeholder}
                 </TaskList>
               )}
