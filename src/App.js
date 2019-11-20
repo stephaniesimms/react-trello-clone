@@ -23,7 +23,7 @@ class InnerList extends PureComponent {
   //   }
   //   return true;
   // }
-  
+
   render() {
     const { column, taskMap, index } = this.props;
     const tasks = column.taskIds.map(taskId => taskMap[taskId]);
@@ -38,13 +38,38 @@ class InnerList extends PureComponent {
 class App extends Component {
   state = initialData;
 
+  /* Call function to announce task start position to screenreader */
+  onDragStart = (start, provided) => {
+    provided.announce(
+      `You have lifted the task in position ${start.source.index + 1}`
+    );
+  }
+
+  /* Announce updated task position to screenreader */
+  onDragUpdate = (update, provided) => {
+    const message = update.destination
+      ? `You have moved the task to position ${update.destination.index + 1}`
+      : `You are currently not over a droppable area`;
+
+    provided.announce(message);
+  }
+
   /* Built-in method onDragEnd:
+  - announce final updated/dropped task position to screenreader
   - if destination is out of bounds, return
   - if user dropped into same position, return
   - if draggable type is 'column', update state of column order
   - otherwise, update state to reflect drag/drop action of 'task'
   */
   onDragEnd = result => {
+    const message = result.destination
+      ? `You have moved the task from position ${result.source.index + 1}
+        to ${result.destination.index + 1}`
+      : `The task has been returned to its starting position of
+        ${result.source.index + 1}`;
+
+    provided.announce(message);
+
     const { destination, source, draggableId, type } = result;
 
     // if destination is out of bounds, return
@@ -157,7 +182,11 @@ class App extends Component {
     });
 
     return (
-      <DragDropContext onDragEnd={this.onDragEnd}>
+      <DragDropContext
+        onDragEnd={this.onDragEnd}
+        onDragStart={this.onDragStart}
+        onDragUpdate={this.onDragUpdate}
+      >
         <Droppable
           droppableId='all-columns'
           direction='horizontal'
