@@ -28,6 +28,7 @@ class Task extends Component {
             {...provided.dragHandleProps} // allows component to be draggable
             ref={provided.innerRef}
             isDragging={snapshot.isDragging}
+            aria-roledescription='Press space bar to lift task' // screenreader voice cmd
           >
             {task.content}
           </Container>

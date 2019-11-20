@@ -3,6 +3,7 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 import initialData from './initialData';
 import Column from './Column';
+import InnerList from './InnerList';
 
 
 const Container = styled.div`
@@ -53,7 +54,7 @@ class App extends Component {
       ...this.state,
       columnOrder: newColumnOrder,
     };
-    
+
     this.setState(newState);
   }
 
