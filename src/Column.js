@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
-import InnerList from './InnerList';
+import Task from './Task';
 
 const Container = styled.div`
   margin: 8px;
@@ -27,6 +27,26 @@ const TaskList = styled.div`
   min-height: 100px;
 `;
 
+// only re-render tasks if list order should be updated, i.e.,
+// do not update until user drops a task in a new position
+class InnerList extends Component {
+  shouldComponentUpdate(nextProps) {
+    if (nextProps.tasks === this.props.tasks) {
+      return false;
+    }
+    return true;
+  }
+
+  render() {
+    return (
+      this.props.tasks.map((task, index) =>
+        <Task
+          key={task.id}
+          task={task}
+          index={index} />
+      ));
+  }
+}
 class Column extends Component {
 
   render() {
